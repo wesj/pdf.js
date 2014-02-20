@@ -883,8 +883,10 @@ PdfStreamConverter.prototype = {
 
     // Create a new channel that is viewer loaded as a resource.
     var ioService = Services.io;
-    var channel = ioService.newChannel(
-                    PDF_VIEWER_WEB_PAGE, null, null);
+    var channel;
+    var viewer = getStringPref(PREF_PREFIX + ".viewer.default", PDF_VIEWER_WEB_PAGE);
+    Services.console.logStringMessage(PREF_PREFIX + ".viewer.default = " + viewer);
+    channel = ioService.newChannel(viewer, null, null);
 
     var listener = this.listener;
     var dataListener = this.dataListener;
@@ -934,7 +936,11 @@ PdfStreamConverter.prototype = {
     // e.g. useful for NoScript
     var securityManager = Cc['@mozilla.org/scriptsecuritymanager;1']
                           .getService(Ci.nsIScriptSecurityManager);
-    var uri = ioService.newURI(PDF_VIEWER_WEB_PAGE, null, null);
+    var uri;
+
+    var viewer = getStringPref(PREF_PREFIX + ".viewer.default", PDF_VIEWER_WEB_PAGE);
+    Services.console.logStringMessage(PREF_PREFIX + ".viewer.default = " + viewer);
+    uri = ioService.newURI(viewer, null, null);
     // FF16 and below had getCodebasePrincipal, it was replaced by
     // getNoAppCodebasePrincipal (bug 758258).
     var resourcePrincipal = 'getNoAppCodebasePrincipal' in securityManager ?

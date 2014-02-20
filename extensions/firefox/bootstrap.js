@@ -150,6 +150,10 @@ function shutdown(aData, aReason) {
 }
 
 function install(aData, aReason) {
+  if (Services.appinfo.ID == "{aa3c5121-dab2-40e2-81ca-7ea25febc110}") {
+    const PDF_VIEWER_WEB_PAGE_SIMPLE = 'resource://pdf.js/web/viewer-simple.html';
+    setStringPref("extensions.uriloader@pdf.js.viewer.default", PDF_VIEWER_WEB_PAGE_SIMPLE);
+  }
 }
 
 function uninstall(aData, aReason) {

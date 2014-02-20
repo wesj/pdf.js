@@ -110,7 +110,7 @@ PDFJS.disableCreateObjectURL = PDFJS.disableCreateObjectURL === undefined ?
  * @var {number}
  */
 PDFJS.verbosity = PDFJS.verbosity === undefined ?
-                  PDFJS.VERBOSITY_LEVELS.warnings : PDFJS.verbosity;
+                  PDFJS.VERBOSITY_LEVELS.infos : PDFJS.verbosity;
 
 /**
  * Document initialization / loading parameters object.
@@ -154,6 +154,7 @@ PDFJS.getDocument = function getDocument(source,
                                          pdfDataRangeTransport,
                                          passwordCallback,
                                          progressCallback) {
+  console.log("getDocument");
   var workerInitializedPromise, workerReadyPromise, transport;
 
   if (typeof source === 'string') {
@@ -180,6 +181,7 @@ PDFJS.getDocument = function getDocument(source,
 
   workerInitializedPromise = new PDFJS.LegacyPromise();
   workerReadyPromise = new PDFJS.LegacyPromise();
+  console.log("make transport");
   transport = new WorkerTransport(workerInitializedPromise,
       workerReadyPromise, pdfDataRangeTransport, progressCallback);
   workerInitializedPromise.then(function transportInitialized() {
@@ -570,6 +572,7 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
 var WorkerTransport = (function WorkerTransportClosure() {
   function WorkerTransport(workerInitializedPromise, workerReadyPromise,
       pdfDataRangeTransport, progressCallback) {
+    console.log("worker transport");
     this.pdfDataRangeTransport = pdfDataRangeTransport;
 
     this.workerReadyPromise = workerReadyPromise;
@@ -631,7 +634,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
         }
         return;
       } catch (e) {
-        info('The worker has been disabled.');
+        info('The worker has been disabled. ' + e);
       }
     }
 //#endif    
@@ -695,8 +698,8 @@ var WorkerTransport = (function WorkerTransportClosure() {
       PDFJS.WorkerMessageHandler.setup(messageHandler);
     },
 
-    setupMessageHandler:
-      function WorkerTransport_setupMessageHandler(messageHandler) {
+    setupMessageHandler: function WorkerTransport_setupMessageHandler(messageHandler) {
+      console.log("setup handler");
       this.messageHandler = messageHandler;
 
       function updatePassword(password) {

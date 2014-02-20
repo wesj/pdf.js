@@ -75,9 +75,11 @@ target.all = function() {
 // Files that need to be included in every build.
 var COMMON_WEB_FILES =
       ['web/images',
+       'web/viewer-simple.css',
        'web/debugger.js'],
     COMMON_WEB_FILES_PREPROCESS =
       ['web/viewer.js',
+       'web/viewer-simple.html',
        'web/viewer.html'];
 
 //
@@ -106,6 +108,7 @@ target.generic = function() {
       [COMMON_WEB_FILES, GENERIC_DIR + '/web'],
       ['external/webL10n/l10n.js', GENERIC_DIR + '/web'],
       ['web/viewer.css', GENERIC_DIR + '/web'],
+      ['web/viewer-simple.css', GENERIC_DIR + '/web'],
       ['web/compatibility.js', GENERIC_DIR + '/web'],
       ['web/compressed.tracemonkey-pldi-09.pdf', GENERIC_DIR + '/web'],
       ['web/locale', GENERIC_DIR + '/web']

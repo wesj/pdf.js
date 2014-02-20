@@ -20,7 +20,6 @@
            Preferences, ViewHistory, PageView, ThumbnailView, URL,
            noContextMenuHandler, SecondaryToolbar, PasswordPrompt,
            PresentationMode, HandTool, Promise, DocumentProperties */
-
 'use strict';
 
 var DEFAULT_URL = 'compressed.tracemonkey-pldi-09.pdf';
@@ -41,6 +40,7 @@ var THUMBNAIL_SCROLL_MARGIN = -19;
 var USE_ONLY_CSS_ZOOM = false;
 var CLEANUP_TIMEOUT = 30000;
 var IGNORE_CURRENT_POSITION_ON_ZOOM = false;
+var THUMBNAILS_ENABLED = true;
 //#if B2G
 //USE_ONLY_CSS_ZOOM = true;
 //PDFJS.disableTextLayer = true;
@@ -127,11 +127,13 @@ var PDFView = {
     this.pageViewScroll = {};
     this.watchScroll(container, this.pageViewScroll, updateViewarea);
 
-    var thumbnailContainer = this.thumbnailContainer =
-                             document.getElementById('thumbnailView');
-    this.thumbnailViewScroll = {};
-    this.watchScroll(thumbnailContainer, this.thumbnailViewScroll,
-                     this.renderHighestPriority.bind(this));
+    if (THUMBNAILS_ENABLED) {
+      var thumbnailContainer = this.thumbnailContainer =
+                               document.getElementById('thumbnailView');
+      this.thumbnailViewScroll = {};
+      this.watchScroll(thumbnailContainer, this.thumbnailViewScroll,
+                       this.renderHighestPriority.bind(this));
+    }
 
     PDFFindBar.initialize({
       bar: document.getElementById('findbar'),
@@ -573,7 +575,6 @@ var PDFView = {
     function getDocumentProgress(progressData) {
       self.progress(progressData.loaded / progressData.total);
     }
-
     PDFJS.getDocument(parameters, pdfDataRangeTransport, passwordNeeded,
                       getDocumentProgress).then(
       function getDocumentCallback(pdfDocument) {
@@ -831,12 +832,6 @@ var PDFView = {
   },
 
   load: function pdfViewLoad(pdfDocument, scale) {
-    var self = this;
-    var isOnePageRenderedResolved = false;
-    var resolveOnePageRendered = null;
-    var onePageRendered = new Promise(function (resolve) {
-      resolveOnePageRendered = resolve;
-    });
     function bindOnAfterDraw(pageView, thumbnailView) {
       // when page is painted, using the image as thumbnail base
       pageView.onAfterDraw = function pdfViewLoadOnAfterDraw() {
@@ -844,9 +839,17 @@ var PDFView = {
           isOnePageRenderedResolved = true;
           resolveOnePageRendered();
         }
-        thumbnailView.setImage(pageView.canvas);
+        if (thumbnailView)
+          thumbnailView.setImage(pageView.canvas);
       };
     }
+
+    var self = this;
+    var isOnePageRenderedResolved = false;
+    var resolveOnePageRendered = null;
+    var onePageRendered = new Promise(function (resolve) {
+      resolveOnePageRendered = resolve;
+    });
 
     PDFFindController.reset();
 
@@ -861,14 +864,16 @@ var PDFView = {
       outerContainer.classList.remove('loadingInProgress');
     });
 
-    var thumbsView = document.getElementById('thumbnailView');
-    thumbsView.parentNode.scrollTop = 0;
+    if (THUMBNAILS_ENABLED) {
+      var thumbsView = document.getElementById('thumbnailView');
+      thumbsView.parentNode.scrollTop = 0;
 
-    while (thumbsView.hasChildNodes())
-      thumbsView.removeChild(thumbsView.lastChild);
+      while (thumbsView.hasChildNodes())
+        thumbsView.removeChild(thumbsView.lastChild);
 
-    if ('_loadingInterval' in thumbsView)
-      clearInterval(thumbsView._loadingInterval);
+      if ('_loadingInterval' in thumbsView)
+        clearInterval(thumbsView._loadingInterval);
+    }
 
     var container = document.getElementById('viewer');
     while (container.hasChildNodes())
@@ -908,11 +913,14 @@ var PDFView = {
         var pageView = new PageView(container, pageNum, scale,
                                     self.navigateTo.bind(self),
                                     viewportClone);
-        var thumbnailView = new ThumbnailView(thumbsView, pageNum,
-                                              viewportClone);
+        var thumbnailView = null;
+        if (THUMBNAILS_ENABLED) {
+          thumbnailView = new ThumbnailView(thumbsView, pageNum,
+                                                viewportClone);
+          thumbnails.push(thumbnailView);
+        }
         bindOnAfterDraw(pageView, thumbnailView);
         pages.push(pageView);
-        thumbnails.push(thumbnailView);
       }
 
       // Fetch all the pages since the viewport is needed before printing
@@ -1588,7 +1596,6 @@ var DocumentOutlineView = function documentOutlineView(outline) {
 
 document.addEventListener('DOMContentLoaded', function webViewerLoad(evt) {
   PDFView.initialize();
-
 //#if (GENERIC || B2G)
   var params = PDFView.parseQueryString(document.location.search.substring(1));
   var file = params.file || DEFAULT_URL;
@@ -1821,7 +1828,6 @@ document.addEventListener('DOMContentLoaded', function webViewerLoad(evt) {
 //    var isFTPFile = /^ftp:/i.test(file);
 //    var streamUrl = response.streamUrl;
 //    if (streamUrl) {
-//      console.log('Found data stream for ' + file);
 //      PDFView.open(streamUrl, 0);
 //      PDFView.setTitleUsingUrl(file);
 //      return;
@@ -1843,7 +1849,6 @@ document.addEventListener('DOMContentLoaded', function webViewerLoad(evt) {
 }, true);
 
 function updateViewarea() {
-
   if (!PDFView.initialized)
     return;
   var visible = PDFView.getVisiblePages();
